@@ -11,7 +11,6 @@ import java.net.Socket;
 public class ServeurTCP
 {
 
-
 	private void execute() throws IOException
 	{
 		//

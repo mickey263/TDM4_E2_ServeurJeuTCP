@@ -15,10 +15,10 @@ public class Game {
 		clientTCP = new ClientTCP();
 		clientTCP.connect(ipSrv,portSrv);
 		clientTCP.execute();
-		for (int i =0;i < 10;i++) {
+/*		for (int i =0;i < 10;i++) {
 			clientTCP.execute();
-		}
+		}*/
 		
-		clientTCP.close();
+		//clientTCP.close();
 	}
 }

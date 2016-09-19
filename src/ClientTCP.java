@@ -4,6 +4,7 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Client basique TCP
@@ -17,6 +18,13 @@ public class ClientTCP
 	DatagramPacket dpE;
 	DatagramPacket dpR;
 	InetSocketAddress adrDest;
+
+	byte[] buf;
+	int posBuf = 0;
+	int posBufFillTo = 0;
+	InputStream is;
+	OutputStream os;
+	
 								
 	/**
 	 * Le client cree une socket, envoie un message au serveur
@@ -39,13 +47,26 @@ public class ClientTCP
 		 * et attend la reponse 
 		 * 
 		 */
-		public void execute()  throws IOException
+	public void execute()  throws IOException
+	{
+		// Attente de la reponse
+		
+		
+		
+		is = socket.getInputStream();
+		os = socket.getOutputStream();
+
+		boolean done = false;
+		
+		while (!done)
 		{
-		// Attente de la reponse 
-			System.out.println("toto");
-		byte[] bufR = new byte[2048];
-		InputStream is = socket.getInputStream();
-		System.out.println(is);
+			int a = getOperande('+');
+			int b = getOperande('=');
+			int c = a+b;
+			os.write(c + ';');
+		}
+
+/*		System.out.println(is);
 		//int lenBufR = is.read(bufR);
 		//int lenBufR = is.readInputStream()
 		StringBuffer message = readInputStream(2048,is);
@@ -92,8 +113,51 @@ public class ClientTCP
 		byte[] bufE = new String(envoi).getBytes();
 		OutputStream os = socket.getOutputStream();
 		os.write(bufE);
-		System.out.println("Message envoye" + envoi);			
+		System.out.println("Message envoye" + envoi);	*/		
 	}
+	
+	private int getOperande(char c) throws IOException
+	{
+		String str = "";
+		boolean done = false;
+		
+		while (!done)
+		{
+			StringBuffer s = getNext();
+			
+			if (s.equals(c))
+			{
+				return new Integer(str);
+			}
+			str = str +s;
+		}
+		return 0;
+	}
+	
+	private StringBuffer getNext() throws IOException
+	{
+		int nbCarValide = posBufFillTo - posBuf;
+		
+		System.out.println(posBuf);
+		
+		if (nbCarValide == 0)
+		{
+			if (posBuf == 1024)
+			{
+				posBuf = 0;
+				posBufFillTo = 0;
+			}
+			System.out.println(posBuf);
+			int nbRead;
+			nbRead = is.read(buf, posBufFillTo, 1024 - posBuf);
+			posBufFillTo = +nbRead;			
+		}
+		
+		byte C = buf[posBuf];
+		posBuf++;
+		return new StringBuffer(C);
+	}
+	
 	
 	public void close() throws IOException
 	{
@@ -102,94 +166,7 @@ public class ClientTCP
 		System.out.println("Arret du client .");
 	}
 		
-		
-		
-		
-		
-/*		//
-		System.out.println("Demarrage du client ...");
 
-		// Creation et envoi du message
-		InetSocketAddress adrDest = new InetSocketAddress(IPSrv, PortSrc);
-		byte[] bufE = new String("JOUER").getBytes();
-		dpE = new DatagramPacket(bufE, bufE.length, adrDest);
-		socket = new Socket();
-		socket.send(dpE);
-		System.out.println("Message envoy�");
-		
-		// Attente de la reponse 
-		byte[] bufR = new byte[2048];
-		dpR = new DatagramPacket(bufR, bufR.length);
-		socket.receive(dpR);
-		String message = new String(bufR, dpR.getOffset(), dpR.getLength());
-		System.out.println("Reponse recue = "+message);
-		
-		int iSQid = 0; int iEQid = 0;
-		int iSNb1 = 0; int iENb1 = 0;
-		int iSNb2 = 0; int iENb2 = 0; 
-		
-		for (int i= 0; i < message.length();i++) {
-			switch (message.charAt(i))
-			{
-				case 'Q':
-					iSQid = i+1;
-					break;
-				case ':':
-					iEQid = i;
-					iSNb1 = i+1;
-					break;
-				case '+':
-					iENb1 = i;
-					iSNb2 = i+1;
-					break;
-				case '=':
-					iENb2 = i;
-					break;
-				default:
-					break;					
-			}
-		}
-		
-		System.out.println("id Question "+ message.substring(iSQid, iEQid));
-		System.out.println("Valeur A "+ message.substring(iSNb1, iENb1));
-		System.out.println("Valeur B "+ message.substring(iSNb2, iENb2));
-		
-		String QID = message.substring(iSQid, iEQid);
-		int A = Integer.valueOf(message.substring(iSNb1, iENb1));
-		int B = Integer.valueOf(message.substring(iSNb2, iENb2));
-		int resultat = A+B;*/
-		
-		/*// Creation et envoi du message
-		byte[] bufE2 = new String("R" + QID + ':' + resultat).getBytes();
-		dpE = new DatagramPacket(bufE2, bufE2.length, adrDest);
-		socket = new DatagramSocket();
-		socket.send(dpE);
-		System.out.println("Message envoyé " + "R" + QID + ':' + resultat);
-	
-		// Attente de la reponse 
-		byte[] bufR2 = new byte[2048];
-		dpR = new DatagramPacket(bufR2, bufR2.length);
-		socket.receive(dpR);
-		String message1 = new String(bufR2, dpR.getOffset(), dpR.getLength());
-		System.out.println("Reponse recue = "+message1);
-		
-		// Creation et envoi du message
-		byte[] bufE3 = new String("SCORE").getBytes();
-		dpE = new DatagramPacket(bufE3, bufE3.length, adrDest);
-		socket = new DatagramSocket();
-		socket.send(dpE);
-		System.out.println("Message envoyé");	
-		
-		// Attente de la reponse 
-		byte[] bufR3 = new byte[2048];
-		dpR = new DatagramPacket(bufR3, bufR3.length);
-		socket.receive(dpR);
-		String message2 = new String(bufR3, dpR.getOffset(), dpR.getLength());
-		System.out.println("Reponse recue = "+message2);
-		
-		// Fermeture de la socket
-		socket.close();
-		System.out.println("Arret du client .");	*/	
 	
 	/**
 	 * Methode utilitaire permettant de lire au minimum nbByte octets dans le fux is
